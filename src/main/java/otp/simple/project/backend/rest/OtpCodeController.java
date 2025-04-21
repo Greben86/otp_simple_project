@@ -40,7 +40,7 @@ public class OtpCodeController {
 
     @Operation(summary = "Редактирование категории")
     @ResponseStatus(HttpStatus.OK)
-    @PostMapping(value = "/{operationId}/activate",
+    @PostMapping(value = "/{id}/activate",
             produces = MediaType.APPLICATION_JSON_VALUE,
             consumes = MediaType.APPLICATION_JSON_VALUE)
     public OtpCodeResponse useCode(@PathVariable("id") Long id, @RequestBody @Valid OtpCodeActivateRequest code) {
@@ -49,7 +49,7 @@ public class OtpCodeController {
 
     @Operation(summary = "Редактирование категории")
     @ResponseStatus(HttpStatus.OK)
-    @GetMapping(value = "/{operationId}/get",
+    @GetMapping(value = "/{id}/get",
             produces = MediaType.APPLICATION_JSON_VALUE,
             consumes = MediaType.APPLICATION_JSON_VALUE)
     public OtpCodeResponse getCodeInfo(@PathVariable("id") Long id) {
@@ -62,7 +62,8 @@ public class OtpCodeController {
             produces = MediaType.APPLICATION_JSON_VALUE,
             consumes = MediaType.APPLICATION_JSON_VALUE)
     public OtpConfigurationDTO updateConfiguration(@RequestBody @Valid OtpConfigurationDTO configuration) {
-        return otpConfigurationService.updateConfiguration(configuration);
+        otpConfigurationService.updateConfiguration(configuration);
+        return configuration;
     }
 
     @Operation(summary = "Получение конфигурации")

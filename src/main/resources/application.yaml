@@ -22,16 +22,32 @@ spring:
       settings:
         web-allow-others: true
   mail:
-    host: ${SMTP_HOST}
-    port: ${SMTP_PORT}
-    username: ${EMAIL_USERNAME}
-    password: ${EMAIL_PASSWORD}
+    host: "${SMTP_HOST:localhost}"
+    port: "${SMTP_PORT:1025}"
+    username: "${EMAIL_USERNAME:admin@mail.me}"
+    password: "${EMAIL_PASSWORD:admin}"
+    test-connection: false
     properties:
+      health:
+        mail:
+          enabled: false
       mail:
         smtp:
           auth: true
           starttls:
             enabled: true
+
+notification:
+  smpp:
+    host: "${SMPP_HOST:localhost}"
+    port: "${SMPP_PORT:2775}"
+    system_id: "${SMPP_SYSTEM_ID:smppclient1}"
+    password: "${SMPP_PASSWORD:password}"
+    system_type: "OTP"
+    source_addr: "OTPService"
+  telegram:
+    bot:
+      token: "${TELEGRAM_BOT_TOKEN:}"
 
 management:
   endpoints:

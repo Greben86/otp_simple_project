@@ -10,7 +10,9 @@ import otp.simple.project.backend.domain.model.OtpCode;
 import otp.simple.project.backend.domain.model.OtpStatus;
 import otp.simple.project.backend.exception.LogicException;
 import otp.simple.project.backend.repository.OtpCodeRepository;
+import otp.simple.project.backend.service.notification.NotificationService;
 
+import java.util.List;
 import java.util.Random;
 import java.util.function.Predicate;
 
@@ -28,7 +30,7 @@ public class OtpCodeService {
     private final OtpConfigurationService configurationService;
     private final OtpCodeRepository repository;
     private final UserService userService;
-    private final EmailNotificationService emailNotificationService;
+    private final List<NotificationService> notificationServices;
 
     /**
      * Добавление категории
@@ -53,7 +55,14 @@ public class OtpCodeService {
         code.setExpirationTime(code.getExpirationTime());
         repository.save(code);
 
-        emailNotificationService.sendSimpleEmail(code.getCode());
+        var sendResult = false;
+        for(var service : notificationServices) {
+            sendResult |= service.sendOtpCode(user, code.getCode());
+        }
+
+        if (!sendResult) {
+            throw new LogicException("Не получилось отправить OTP-код пользователю");
+        }
 
         return convertToResponse(code);
     }
@@ -67,7 +76,7 @@ public class OtpCodeService {
      */
     public OtpCodeResponse activateCode(final Long id, final OtpCodeActivateRequest request) {
         var user = userService.getCurrentUser();
-        if (!repository.existsByOperationIdAndStatusAndUser(request.operationId(), OtpStatus.ACTIVE, user)) {
+        if (!repository.existsByOperationIdAndStatusAndUser(id, OtpStatus.ACTIVE, user)) {
             throw new LogicException("Активный OTP-код для операции не найден");
         }
 

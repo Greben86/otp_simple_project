@@ -20,6 +20,8 @@
 		<java.version>21</java.version>
 		<openapi.version>2.3.0</openapi.version>
 		<jsonwebtoken.version>0.12.3</jsonwebtoken.version>
+		<opensmpp.version>3.0.2</opensmpp.version>
+		<httpclient.version>4.5.14</httpclient.version>
 	</properties>
 
 	<dependencies>
@@ -61,6 +63,14 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-mail</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.opensmpp</groupId>
+			<artifactId>opensmpp-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+		</dependency>
 
 		<dependency>
 			<groupId>org.projectlombok</groupId>
@@ -96,6 +106,7 @@
 
 	<dependencyManagement>
 		<dependencies>
+			<!-- JWT -->
 			<dependency>
 				<groupId>io.jsonwebtoken</groupId>
 				<artifactId>jjwt-api</artifactId>
@@ -110,6 +121,19 @@
 				<groupId>io.jsonwebtoken</groupId>
 				<artifactId>jjwt-jackson</artifactId>
 				<version>${jsonwebtoken.version}</version>
+			</dependency>
+
+            <!-- SMS -->
+			<dependency>
+				<groupId>org.opensmpp</groupId>
+				<artifactId>opensmpp-core</artifactId>
+				<version>${opensmpp.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.apache.httpcomponents</groupId>
+				<artifactId>httpclient</artifactId>
+				<version>${httpclient.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

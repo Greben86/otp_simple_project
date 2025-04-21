@@ -24,19 +24,16 @@ public class OtpConfigurationService {
      * Обновление конфигурации
      *
      * @param request данные конфигурации
-     * @return данные конфигурации
      */
-    public OtpConfigurationDTO updateConfiguration(final OtpConfigurationDTO request) {
+    public void updateConfiguration(final OtpConfigurationDTO request) {
         var config = repository.findById(CONFIG_ID)
                 .orElseGet(OtpConfig::new);
 
-        config.setId(1L);
+        config.setId(CONFIG_ID);
         config.setExpirationTime(request.expirationTime());
         config.setLength(request.length());
 
         repository.save(config);
-
-        return request;
     }
 
     /**

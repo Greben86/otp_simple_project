@@ -5,7 +5,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import otp.simple.project.backend.domain.dto.UserRequest;
+import otp.simple.project.backend.domain.dto.UserDTO;
 import otp.simple.project.backend.domain.model.User;
 import otp.simple.project.backend.exception.LogicException;
 import otp.simple.project.backend.repository.UserRepository;
@@ -47,13 +47,16 @@ public class UserService {
      *
      * @return пользователь
      */
-    public void updateUser(final UserRequest request) {
+    public void updateUser(final UserDTO request) {
         final var user = getCurrentUser();
         if (repository.existsByUsername(request.username())) {
             throw new LogicException("Пользователь с таким именем уже существует");
         }
 
         user.setUsername(request.username());
+        user.setEmail(request.email());
+        user.setPhone(request.phone());
+        user.setTelegramId(request.telegramId());
         repository.save(user);
     }
 

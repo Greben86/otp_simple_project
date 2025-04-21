@@ -35,6 +35,8 @@ public class AuthenticationService {
                 .username(request.username())
                 .password(passwordEncoder.encode(request.password()))
                 .email(request.email())
+                .phone(request.phone())
+                .telegramId(request.telegramId())
                 .build();
 
         userService.addUser(user);
