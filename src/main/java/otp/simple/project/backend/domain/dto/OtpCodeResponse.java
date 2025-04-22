@@ -1,8 +1,7 @@
 package otp.simple.project.backend.domain.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
-import otp.simple.project.backend.domain.model.OtpStatus;
+import otp.simple.project.backend.domain.model.Status;
 
 @Schema(description = "OTP код: DTO ответа")
 public record OtpCodeResponse(
@@ -10,5 +9,5 @@ public record OtpCodeResponse(
         long id,
 
         @Schema(description = "Статус OTP кода", example = "Активен")
-        OtpStatus status) {
+        Status status) {
 }

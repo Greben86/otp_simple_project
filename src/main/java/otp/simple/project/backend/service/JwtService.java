@@ -50,6 +50,7 @@ public class JwtService {
         var claims = new HashMap<String, Object>();
         if (userDetails instanceof User customUserDetails) {
             claims.put("id", customUserDetails.getId());
+            claims.put("role", customUserDetails.getRole());
         }
         return generateToken(claims, userDetails);
     }

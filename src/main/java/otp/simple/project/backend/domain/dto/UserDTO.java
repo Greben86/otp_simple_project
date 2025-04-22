@@ -26,5 +26,5 @@ public record UserDTO(
 
         @Schema(description = "Идентификатор чата Telegram пользователя", example = "-123456789")
         @NotBlank(message = "Поле не может быть пустым")
-        String telegramId) {
+        String telegramChatId) {
 }

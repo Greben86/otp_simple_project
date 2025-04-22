@@ -4,11 +4,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import otp.simple.project.backend.domain.dto.UserDTO;
 import otp.simple.project.backend.domain.model.User;
 import otp.simple.project.backend.exception.LogicException;
 import otp.simple.project.backend.repository.UserRepository;
+
+import java.util.List;
 
 /**
  * Сервис управления пользователями
@@ -43,6 +46,18 @@ public class UserService {
     }
 
     /**
+     * Удаление пользователя
+     *
+     * @param id идентификатор пользователя
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void deleteUser(final Long id) {
+        final var user = repository.findById(id)
+                .orElseThrow(() -> new LogicException("Пользователь не найден"));
+        repository.delete(user);
+    }
+
+    /**
      * Обновление пользователя
      *
      * @return пользователь
@@ -56,7 +71,7 @@ public class UserService {
         user.setUsername(request.username());
         user.setEmail(request.email());
         user.setPhone(request.phone());
-        user.setTelegramId(request.telegramId());
+        user.setTelegramChatId(request.telegramChatId());
         repository.save(user);
     }
 
@@ -95,5 +110,20 @@ public class UserService {
                 .getName();
 
         return getByUsername(username);
+    }
+
+    /**
+     * Выборка всех пользователей
+     *
+     * @return список пользователей
+     */
+    public List<UserDTO> getAllUsers() {
+        return repository.findAll().stream()
+                .map(this::convertToResponse)
+                .toList();
+    }
+
+    private UserDTO convertToResponse(User input) {
+        return new UserDTO(input.getUsername(), input.getEmail(), input.getPhone(), input.getTelegramChatId());
     }
 }

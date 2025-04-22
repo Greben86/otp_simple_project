@@ -14,20 +14,20 @@ import java.util.stream.Stream;
  * Статус OTP-кода
  */
 @RequiredArgsConstructor
-public enum OtpStatus {
+public enum Status {
 
     ACTIVE("Активен"),
-    EXPIRED("Пророчен"),
+    EXPIRED("Просрочен"),
     USED("Использован");
 
     @Getter(onMethod_ = @JsonValue)
     private final String name;
 
-    private static final Map<String, OtpStatus> MAP = Stream.of(values())
-            .collect(Collectors.toMap(OtpStatus::getName, Function.identity()));
+    private static final Map<String, Status> MAP = Stream.of(values())
+            .collect(Collectors.toMap(Status::getName, Function.identity()));
 
     @JsonCreator
-    public static OtpStatus forValue(final String value) {
+    public static Status forValue(final String value) {
         return MAP.get(value);
     }
 }

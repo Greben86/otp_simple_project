@@ -62,3 +62,7 @@ security:
     expiration:
       milliseconds: 144000000
 
+role:
+  admin:
+    list: "Viktor,admin,root"
+

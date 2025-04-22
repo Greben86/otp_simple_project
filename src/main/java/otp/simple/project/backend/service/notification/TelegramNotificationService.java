@@ -30,7 +30,7 @@ public class TelegramNotificationService implements NotificationService {
         try {
             String url = String.format("https://api.telegram.org/bot%s/sendMessage?chat_id=%s&text=%s",
                     token,
-                    user.getTelegramId(),
+                    user.getTelegramChatId(),
                     urlEncode("OTP: " + otpCode));
 
             return sendTelegramRequest(url);

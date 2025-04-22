@@ -1,8 +1,7 @@
 package otp.simple.project.backend.domain.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -23,8 +22,10 @@ public class OtpConfig implements Serializable {
     @Id
     @EqualsAndHashCode.Include
     private Long id;
-    
+
+    @Column(nullable = false)
     private Long expirationTime;
 
+    @Column(nullable = false)
     private Integer length;
 }

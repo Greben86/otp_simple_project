@@ -1,6 +1,7 @@
 package otp.simple.project.backend.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -9,8 +10,11 @@ import otp.simple.project.backend.domain.dto.ChangePasswordRequest;
 import otp.simple.project.backend.domain.dto.JwtAuthenticationResponse;
 import otp.simple.project.backend.domain.dto.SignInRequest;
 import otp.simple.project.backend.domain.dto.SignUpRequest;
+import otp.simple.project.backend.domain.model.Role;
 import otp.simple.project.backend.domain.model.User;
 import otp.simple.project.backend.exception.LogicException;
+
+import java.util.List;
 
 /**
  * Сервис аутентификации
@@ -24,6 +28,9 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
 
+    @Value("${role.admin.list}")
+    private List<String> adminLoginList;
+
     /**
      * Регистрация пользователя
      *
@@ -34,9 +41,10 @@ public class AuthenticationService {
         final var user = User.builder()
                 .username(request.username())
                 .password(passwordEncoder.encode(request.password()))
+                .role(adminLoginList.contains(request.username()) ? Role.ROLE_ADMIN : Role.ROLE_USER)
                 .email(request.email())
                 .phone(request.phone())
-                .telegramId(request.telegramId())
+                .telegramChatId(request.telegramId())
                 .build();
 
         userService.addUser(user);

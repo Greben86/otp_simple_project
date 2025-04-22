@@ -1,13 +1,19 @@
 package otp.simple.project.backend.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import otp.simple.project.backend.domain.dto.OtpCodeActivateRequest;
 import otp.simple.project.backend.domain.dto.OtpCodeCreateRequest;
 import otp.simple.project.backend.domain.dto.OtpCodeResponse;
 import otp.simple.project.backend.domain.model.OtpCode;
-import otp.simple.project.backend.domain.model.OtpStatus;
+import otp.simple.project.backend.domain.model.Role;
+import otp.simple.project.backend.domain.model.Status;
 import otp.simple.project.backend.exception.LogicException;
 import otp.simple.project.backend.repository.OtpCodeRepository;
 import otp.simple.project.backend.service.notification.NotificationService;
@@ -19,6 +25,7 @@ import java.util.function.Predicate;
 /**
  * Сервис управления категориями
  */
+@Slf4j
 @RequiredArgsConstructor
 @Service
 @Transactional
@@ -30,34 +37,38 @@ public class OtpCodeService {
     private final OtpConfigurationService configurationService;
     private final OtpCodeRepository repository;
     private final UserService userService;
+    private final PasswordEncoder passwordEncoder;
     private final List<NotificationService> notificationServices;
 
     /**
-     * Добавление категории
+     * Добавление OTP-кода
      *
-     * @param request данные категории
-     * @return новая категория
+     * @param request данные OTP-кода
+     * @return информация о OTP-коде
      */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public OtpCodeResponse createCode(final OtpCodeCreateRequest request) {
         var user = userService.getCurrentUser();
-        if (repository.existsByOperationIdAndStatusAndUser(request.operationId(), OtpStatus.ACTIVE, user)) {
+        if (repository.existsByOperationIdAndStatusAndUser(request.operationId(), Status.ACTIVE, user)) {
             throw new LogicException("Найден активный OTP-код для операции");
         }
 
         var config = configurationService.getConfiguration();
 
+        var newKey = generateKey(config.length(), value ->
+                repository.existsByCodeAndStatusAndUser(value, Status.ACTIVE, user));
+
         var code = new OtpCode();
         code.setUser(user);
-        code.setStatus(OtpStatus.ACTIVE);
+        code.setStatus(Status.ACTIVE);
         code.setOperationId(request.operationId());
-        code.setCode(generateKey(config.length(), value ->
-                repository.existsByCodeAndStatusAndUser(value, OtpStatus.ACTIVE, user)));
-        code.setExpirationTime(code.getExpirationTime());
+        code.setCode(passwordEncoder.encode(newKey));
+        code.setExpirationTime(config.expirationTime());
         repository.save(code);
 
         var sendResult = false;
         for(var service : notificationServices) {
-            sendResult |= service.sendOtpCode(user, code.getCode());
+            sendResult |= service.sendOtpCode(user, newKey);
         }
 
         if (!sendResult) {
@@ -68,36 +79,77 @@ public class OtpCodeService {
     }
 
     /**
-     * Редактирование категории
+     * Удаление OTP-кода
      *
-     * @param id идентификатор категории
-     * @param request данные категории
-     * @return обновленная категория
+     * @param id идентификатор OTP-кода
      */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void deleteCode(final Long id) {
+        final var code = repository.findById(id)
+                .orElseThrow(() -> new LogicException("OTP-код не найден"));
+        repository.delete(code);
+    }
+
+    /**
+     * Активация OTP-кода
+     *
+     * @param id идентификатор операции
+     * @param request данные OTP-кода
+     * @return информация о OTP-коде
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public OtpCodeResponse activateCode(final Long id, final OtpCodeActivateRequest request) {
         var user = userService.getCurrentUser();
-        if (!repository.existsByOperationIdAndStatusAndUser(id, OtpStatus.ACTIVE, user)) {
+        if (!repository.existsByOperationIdAndStatusAndUser(id, Status.ACTIVE, user)) {
             throw new LogicException("Активный OTP-код для операции не найден");
         }
 
-        var code = repository.findByOperationIdAndStatusAndUser(id, OtpStatus.ACTIVE, user)
+        var code = repository.findByOperationIdAndStatusAndUser(id, Status.ACTIVE, user)
                 .orElseThrow(IllegalStateException::new);
-        code.setStatus(OtpStatus.USED);
+        final var inputKey = passwordEncoder.encode(request.code());
+        if (inputKey.equals(code.getCode())) {
+            throw new LogicException("OTP-код не подходит");
+        }
+        code.setStatus(Status.USED);
         repository.save(code);
 
         return convertToResponse(code);
     }
 
     /**
-     * Выборка всех категорий пользователя
+     * Информация о OTP-коде пользователя
      *
-     * @return список категорий
+     * @return информация о OTP-коде
      */
     public OtpCodeResponse getCodeInfo(Long id) {
         var user = userService.getCurrentUser();
-        return repository.findByOperationIdAndUser(id, user)
-                .map(this::convertToResponse)
-                .orElseThrow(() -> new LogicException("OTP-код не найден"));
+        if (Role.ROLE_ADMIN.equals(user.getRole())) {
+            return repository.findByOperationId(id)
+                    .map(this::convertToResponse)
+                    .orElseThrow(() -> new LogicException("OTP-код не найден"));
+        } else {
+            return repository.findByOperationIdAndUser(id, user)
+                    .map(this::convertToResponse)
+                    .orElseThrow(() -> new LogicException("OTP-код не найден"));
+        }
+    }
+
+    /**
+     * Выборка всех активных OTP-кодов
+     *
+     * @return список активных OTP-кодов
+     */
+    public List<OtpCodeResponse> getAllCodeInfo() {
+        var user = userService.getCurrentUser();
+        if (Role.ROLE_ADMIN.equals(user.getRole())) {
+            return repository.findByStatus(Status.ACTIVE).stream()
+                    .map(this::convertToResponse)
+                    .toList();
+        } else {
+            return repository.findByStatusAndUser(Status.ACTIVE, user).stream()
+                    .map(this::convertToResponse)
+                    .toList();
+        }
     }
 
     private OtpCodeResponse convertToResponse(OtpCode input) {
@@ -126,5 +178,24 @@ public class OtpCodeService {
         } while (existChecker.test(key));
 
         return key;
+    }
+
+    /**
+     * Проверка по крону истекших по времени кодов OTP
+     * метод вызывается раз в минуту
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Scheduled(cron = "0 * * * * *")
+    @Async
+    public void checkExpiringCode() {
+        final var activeCodeList = repository.findByStatus(Status.ACTIVE);
+        final long currentMilliseconds = System.currentTimeMillis();
+        for (final var activeCode : activeCodeList) {
+            if (currentMilliseconds - activeCode.getInsertTime().getTime() > activeCode.getExpirationTime()) {
+                activeCode.setStatus(Status.EXPIRED);
+                log.info("OTP-код {} просрочен", activeCode.getCode());
+            }
+        }
+        repository.saveAll(activeCodeList);
     }
 }
