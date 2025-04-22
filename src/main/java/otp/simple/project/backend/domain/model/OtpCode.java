@@ -1,6 +1,5 @@
 package otp.simple.project.backend.domain.model;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -32,7 +31,7 @@ public class OtpCode implements Serializable {
     @EqualsAndHashCode.Include
     private Long id;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     private User user;
 
     @Column(unique = true, nullable = false)

@@ -1,6 +1,7 @@
 package otp.simple.project.backend.domain.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -8,6 +9,10 @@ import jakarta.validation.constraints.Size;
 
 @Schema(description = "Пользователь: DTO запроса")
 public record UserDTO(
+        @Schema(description = "Идентификатор пользователя", example = "1")
+        @Nullable
+        long id,
+
         @Schema(description = "Имя пользователя", example = "Вася")
         @Size(min = 1, max = 50, message = "Имя пользователя должно содержать от 1 до 50 символов")
         @NotBlank(message = "Поле не может быть пустым")

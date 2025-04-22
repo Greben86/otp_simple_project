@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,6 +19,7 @@ import otp.simple.project.backend.domain.dto.SignInRequest;
 import otp.simple.project.backend.domain.dto.SignUpRequest;
 import otp.simple.project.backend.service.AuthenticationService;
 
+@Slf4j
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
@@ -32,6 +34,7 @@ public class AuthController {
             produces = MediaType.APPLICATION_JSON_VALUE,
             consumes = MediaType.APPLICATION_JSON_VALUE)
     public JwtAuthenticationResponse signUp(@RequestBody @Valid SignUpRequest request) {
+        log.info("Регистрация пользователя {}", request.username());
         return authenticationService.signUp(request);
     }
 
@@ -41,6 +44,7 @@ public class AuthController {
             produces = MediaType.APPLICATION_JSON_VALUE,
             consumes = MediaType.APPLICATION_JSON_VALUE)
     public JwtAuthenticationResponse signIn(@RequestBody @Valid SignInRequest request) {
+        log.info("Авторизация пользователя {}", request.username());
         return authenticationService.signIn(request);
     }
 
@@ -50,6 +54,7 @@ public class AuthController {
             produces = MediaType.APPLICATION_JSON_VALUE,
             consumes = MediaType.APPLICATION_JSON_VALUE)
     public JwtAuthenticationResponse passwordChange(@RequestBody @Valid ChangePasswordRequest request) {
+        log.info("Смена пароля пользователя");
         return authenticationService.passwordChange(request);
     }
 }

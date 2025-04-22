@@ -28,7 +28,7 @@ public class TelegramNotificationService implements NotificationService {
      */
     public boolean sendOtpCode(final User user, final String otpCode) {
         try {
-            String url = String.format("https://api.telegram.org/bot%s/sendMessage?chat_id=%s&text=%s",
+            final var url = String.format("https://api.telegram.org/bot%s/sendMessage?chat_id=%s&text=%s",
                     token,
                     user.getTelegramChatId(),
                     urlEncode("OTP: " + otpCode));
@@ -49,7 +49,7 @@ public class TelegramNotificationService implements NotificationService {
                 if (statusCode != 200) {
                     log.error("Telegram API error. Status code: {}", statusCode);
                 } else {
-                    log.info("Telegram message sent successfully");
+                    log.info("Сообщение Telegram отправлено успешно");
                     result = true;
                 }
             }

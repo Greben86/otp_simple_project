@@ -6,7 +6,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import otp.simple.project.backend.domain.dto.SignUpRequest;
 import otp.simple.project.backend.domain.dto.UserDTO;
+import otp.simple.project.backend.domain.model.Role;
 import otp.simple.project.backend.domain.model.User;
 import otp.simple.project.backend.exception.LogicException;
 import otp.simple.project.backend.repository.UserRepository;
@@ -26,22 +28,30 @@ public class UserService {
     /**
      * Создание пользователя
      *
+     * @param request данные пользователя
      * @return созданный пользователь
      */
-    public User addUser(final User user) {
-        if (repository.existsByUsername(user.getUsername())) {
+    public User addUser(final SignUpRequest request, final String encodedPassword) {
+        if (repository.existsByUsername(request.username())) {
             throw new LogicException("Пользователь с таким именем уже существует");
         }
+
+        final var user = User.builder()
+                .username(request.username())
+                .password(encodedPassword)
+                .role(Role.ROLE_USER)
+                .email(request.email())
+                .phone(request.phone())
+                .telegramChatId(request.telegramId())
+                .build();
 
         return repository.save(user);
     }
 
     /**
      * Обновление пользователя
-     *
-     * @return пользователь
      */
-    public void updateUser(final User user) {
+    public void saveUser(final User user) {
         repository.save(user);
     }
 
@@ -52,9 +62,11 @@ public class UserService {
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void deleteUser(final Long id) {
-        final var user = repository.findById(id)
-                .orElseThrow(() -> new LogicException("Пользователь не найден"));
-        repository.delete(user);
+        final var user = getCurrentUser();
+        if (user.getId().equals(id)) {
+            throw new LogicException("Нельзя удалить себя");
+        }
+        repository.deleteById(id);
     }
 
     /**
@@ -62,7 +74,7 @@ public class UserService {
      *
      * @return пользователь
      */
-    public void updateUser(final UserDTO request) {
+    public UserDTO saveUser(final UserDTO request) {
         final var user = getCurrentUser();
         if (repository.existsByUsername(request.username())) {
             throw new LogicException("Пользователь с таким именем уже существует");
@@ -73,6 +85,8 @@ public class UserService {
         user.setPhone(request.phone());
         user.setTelegramChatId(request.telegramChatId());
         repository.save(user);
+
+        return convertToResponse(user);
     }
 
     /**
@@ -88,7 +102,6 @@ public class UserService {
 
     /**
      * Получение пользователя по имени пользователя
-     * <p>
      * Нужен для Spring Security
      *
      * @return пользователь
@@ -118,12 +131,28 @@ public class UserService {
      * @return список пользователей
      */
     public List<UserDTO> getAllUsers() {
-        return repository.findAll().stream()
+        return repository.findByRoleNot(Role.ROLE_ADMIN).stream()
                 .map(this::convertToResponse)
                 .toList();
     }
 
-    private UserDTO convertToResponse(User input) {
-        return new UserDTO(input.getUsername(), input.getEmail(), input.getPhone(), input.getTelegramChatId());
+    private UserDTO convertToResponse(User user) {
+        return new UserDTO(user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getPhone(),
+                user.getTelegramChatId());
+    }
+
+    /**
+     * Выдача прав администратора пользователю
+     *
+     * @param id идентификатор пользователя
+     */
+    public void setAdmin(final Long id) {
+        final var user = repository.findById(id)
+                .orElseThrow(() -> new LogicException("Пользователь не найден"));
+        user.setRole(Role.ROLE_ADMIN);
+        repository.save(user);
     }
 }

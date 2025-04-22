@@ -30,6 +30,8 @@ public class EmailNotificationService implements NotificationService {
             simpleMailMessage.setText(String.format("OTP: %s", otpCode));
             emailSender.send(simpleMailMessage);
 
+            log.info("Сообщение Email отправлено успешно");
+
             return true;
         } catch (Exception e) {
             log.error("Ошибка отправки Email: {}", e.getMessage());

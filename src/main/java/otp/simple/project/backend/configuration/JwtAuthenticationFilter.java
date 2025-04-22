@@ -1,4 +1,4 @@
-package otp.simple.project.backend;
+package otp.simple.project.backend.configuration;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

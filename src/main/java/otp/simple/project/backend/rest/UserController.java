@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +22,7 @@ import otp.simple.project.backend.service.UserService;
 
 import java.util.List;
 
+@Slf4j
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("user")
@@ -35,8 +37,8 @@ public class UserController {
             produces = MediaType.APPLICATION_JSON_VALUE,
             consumes = MediaType.APPLICATION_JSON_VALUE)
     public UserDTO editUser(@RequestBody @Valid UserDTO userDTO) {
-        userService.updateUser(userDTO);
-        return userDTO;
+        log.info("Редактирование имени пользователя");
+        return userService.saveUser(userDTO);
     }
 
     @Operation(summary = "Список всех пользователей, кроме администраторов")
@@ -45,6 +47,7 @@ public class UserController {
             produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
     public List<UserDTO> getUsers() {
+        log.info("Список всех пользователей, кроме администраторов");
         return userService.getAllUsers();
     }
 
@@ -53,7 +56,17 @@ public class UserController {
     @DeleteMapping(value = "/{id}/delete")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteUser(@PathVariable("id") Long id) {
+        log.info("Удаление пользователя");
         userService.deleteUser(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/{id}/set-admin")
+    @Operation(summary = "Добавить роль ADMIN пользователю")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> getAdmin(@PathVariable("id") Long id) {
+        log.info("Добавление роли ADMIN пользователю");
+        userService.setAdmin(id);
         return ResponseEntity.ok().build();
     }
 }

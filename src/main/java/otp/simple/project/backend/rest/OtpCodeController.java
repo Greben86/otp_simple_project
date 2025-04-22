@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +26,7 @@ import otp.simple.project.backend.service.OtpConfigurationService;
 
 import java.util.List;
 
+@Slf4j
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("otp")
@@ -40,6 +42,7 @@ public class OtpCodeController {
             produces = MediaType.APPLICATION_JSON_VALUE,
             consumes = MediaType.APPLICATION_JSON_VALUE)
     public OtpCodeResponse createCode(@RequestBody @Valid OtpCodeCreateRequest code) {
+        log.info("Создание OTP-кода операции {}", code.operationId());
         return otpCodeService.createCode(code);
     }
 
@@ -49,6 +52,7 @@ public class OtpCodeController {
             produces = MediaType.APPLICATION_JSON_VALUE,
             consumes = MediaType.APPLICATION_JSON_VALUE)
     public OtpCodeResponse useCode(@PathVariable("id") Long id, @RequestBody @Valid OtpCodeActivateRequest code) {
+        log.info("Активация OTP-кода операции {}", id);
         return otpCodeService.activateCode(id, code);
     }
 
@@ -58,6 +62,7 @@ public class OtpCodeController {
             produces = MediaType.APPLICATION_JSON_VALUE,
             consumes = MediaType.APPLICATION_JSON_VALUE)
     public OtpCodeResponse getCodeInfo(@PathVariable("id") Long id) {
+        log.info("Информация OTP-кода операции {}", id);
         return otpCodeService.getCodeInfo(id);
     }
 
@@ -66,6 +71,7 @@ public class OtpCodeController {
     @GetMapping(value = "/all",
             produces = MediaType.APPLICATION_JSON_VALUE)
     public List<OtpCodeResponse> getAllCodes() {
+        log.info("Список всех OTP-кодов");
         return otpCodeService.getAllCodeInfo();
     }
 
@@ -74,17 +80,19 @@ public class OtpCodeController {
     @DeleteMapping(value = "/{id}/delete")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteCode(@PathVariable("id") Long id) {
+        log.info("Удаление OTP-кода {}", id);
         otpCodeService.deleteCode(id);
         return ResponseEntity.ok().build();
     }
 
-    @Operation(summary = "Добавление/обновление конфигурации")
+    @Operation(summary = "Изменение конфигурации")
     @ResponseStatus(HttpStatus.OK)
     @PostMapping(value = "/configuration/update",
             produces = MediaType.APPLICATION_JSON_VALUE,
             consumes = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
     public OtpConfigurationDTO updateConfiguration(@RequestBody @Valid OtpConfigurationDTO configuration) {
+        log.info("Изменение конфигурации");
         otpConfigurationService.updateConfiguration(configuration);
         return configuration;
     }
@@ -95,6 +103,7 @@ public class OtpCodeController {
             produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
     public OtpConfigurationDTO getConfiguration() {
+        log.info("Получение конфигурации");
         return otpConfigurationService.getConfiguration();
     }
 }

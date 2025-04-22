@@ -59,6 +59,8 @@ public class SmsNotificationService implements NotificationService {
 
             session.submit(submitSM);
 
+            log.info("Сообщение Sms отправлено успешно");
+
             return true;
         } catch (Exception e) {
             log.error("Ошибка отправки Sms: {}", e.getMessage());
